@@ -1,0 +1,486 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영화 티어리스트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: flex;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .left-section {
+            flex: 1;
+            min-width: 600px;
+        }
+
+        .right-section {
+            flex: 0 0 350px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-add {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-add:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-download {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-upload {
+            background: #ed8936;
+            color: white;
+        }
+
+        .btn-upload:hover {
+            background: #dd6b20;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(237, 137, 54, 0.4);
+        }
+
+        .btn-clear {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
+        }
+
+        .tier-container {
+            margin-bottom: 15px;
+        }
+
+        .tier-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-weight: 700;
+            font-size: 1.2em;
+        }
+
+        .tier-badge {
+            width: 50px;
+            height: 50px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.3em;
+        }
+
+        .tier-s { background: #ff6b6b; }
+        .tier-a { background: #ffa94d; }
+        .tier-b { background: #ffd43b; }
+        .tier-c { background: #51cf66; }
+        .tier-d { background: #74c0fc; }
+
+        .tier-drop-zone {
+            background: #f0f0f0;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 100px;
+            transition: all 0.3s;
+        }
+
+        .tier-drop-zone.drag-over {
+            background: #e3f2fd;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .movie-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+            cursor: move;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .movie-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .movie-item.dragging {
+            opacity: 0.5;
+        }
+
+        .movie-info {
+            flex: 1;
+        }
+
+        .movie-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .movie-meta {
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .btn-delete {
+            background: #f56565;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .btn-delete:hover {
+            background: #e53e3e;
+        }
+
+        .movie-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .movie-pool-item {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 2px solid #e0e0e0;
+            cursor: move;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 0 1 calc(50% - 5px);
+        }
+
+        .movie-pool-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .movie-pool-item.dragging {
+            opacity: 0.5;
+        }
+
+        .pool-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .pool-meta {
+            font-size: 0.8em;
+            color: #999;
+        }
+
+        .pool-delete {
+            background: #f56565;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8em;
+            align-self: flex-start;
+            transition: all 0.3s;
+        }
+
+        .pool-delete:hover {
+            background: #e53e3e;
+        }
+
+        .pool-drop-zone {
+            background: #f8f9fa;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 150px;
+            transition: all 0.3s;
+        }
+
+        .pool-drop-zone.drag-over {
+            background: #fff3cd;
+            border-color: #ed8936;
+            box-shadow: 0 0 10px rgba(237, 137, 54, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 30px 15px;
+            font-style: italic;
+        }
+
+        @media (max-width: 1200px) {
+            .content {
+                flex-direction: column;
+            }
+
+            .left-section {
+                min-width: auto;
+            }
+
+            .right-section {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 영화 티어리스트</h1>
+            <p>본 영화들을 순위대로 정렬해보세요</p>
+        </div>
+
+        <div class="content">
+            <!-- 왼쪽: 티어 섹션 -->
+            <div class="left-section">
+                <div class="tier-container">
+                    <div class="tier-label">
+                        <div class="tier-badge tier-s">S</div>
+                        <span>최고 (S Tier)</span>
+                    </div>
+                    <div class="tier-drop-zone" data-tier="S">
+                        <div class="empty-message">여기에 영화를 드래그하세요</div>
+                    </div>
+                </div>
+
+                <div class="tier-container">
+                    <div class="tier-label">
+                        <div class="tier-badge tier-a">A</div>
+                        <span>매우 좋음 (A Tier)</span>
+                    </div>
+                    <div class="tier-drop-zone" data-tier="A">
+                        <div class="empty-message">여기에 영화를 드래그하세요</div>
+                    </div>
+                </div>
+
+                <div class="tier-container">
+                    <div class="tier-label">
+                        <div class="tier-badge tier-b">B</div>
+                        <span>좋음 (B Tier)</span>
+                    </div>
+                    <div class="tier-drop-zone" data-tier="B">
+                        <div class="empty-message">여기에 영화를 드래그하세요</div>
+                    </div>
+                </div>
+
+                <div class="tier-container">
+                    <div class="tier-label">
+                        <div class="tier-badge tier-c">C</div>
+                        <span>보통 (C Tier)</span>
+                    </div>
+                    <div class="tier-drop-zone" data-tier="C">
+                        <div class="empty-message">여기에 영화를 드래그하세요</div>
+                    </div>
+                </div>
+
+                <div class="tier-container">
+                    <div class="tier-label">
+                        <div class="tier-badge tier-d">D</div>
+                        <span>별로 (D Tier)</span>
+                    </div>
+                    <div class="tier-drop-zone" data-tier="D">
+                        <div class="empty-message">여기에 영화를 드래그하세요</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 오른쪽: 입력 및 관리 섹션 -->
+            <div class="right-section">
+                <div class="section-title">영화 추가</div>
+
+                <div class="input-group">
+                    <label for="movieTitle">영화 제목</label>
+                    <input type="text" id="movieTitle" placeholder="예: 쇼생크 탈출">
+                </div>
+
+                <div class="input-group">
+                    <label for="movieYear">개봉 연도</label>
+                    <input type="number" id="movieYear" placeholder="예: 1994" min="1900" max="2099">
+                </div>
+
+                <div class="input-group">
+                    <label for="movieDirector">감독</label>
+                    <input type="text" id="movieDirector" placeholder="예: 프랭크 다라본트">
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-add" onclick="addMovie()">추가</button>
+                </div>
+
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+
+                <div class="section-title">영화 목록</div>
+                <div class="pool-drop-zone" id="moviePool">
+                    <div class="empty-message">추가된 영화가 없습니다</div>
+                </div>
+
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+
+                <div class="section-title">파일 관리</div>
+                <div class="button-group">
+                    <button class="btn-download" onclick="downloadList()">다운로드</button>
+                </div>
+
+                <div class="button-group">
+                    <div class="file-input-wrapper">
+                        <button class="btn-upload">업로드</button>
+                        <input type="file" id="fileInput" accept=".json" onchange="uploadList(event)">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-clear" onclick="clearAll()">초기화</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 데이터 저장소
+        let movies = {
+            pool: [],
+            S: [],
+            A: [],
+            B: [],
+            C: [],
+            D: []
+        };
+
+        const STORAGE_KEY = 'movieTierList';
+
+        // 초기화
+        function init() {
