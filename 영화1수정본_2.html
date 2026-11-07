@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나만의 영화 티어리스트</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-color: #2d2d2d;
+            --text-color: #ffffff;
+            --accent-color: #e50914;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        h1 { 
+            margin-bottom: 20px; 
+            color: var(--accent-color);
+            font-size: 32px;
+        }
+
+        /* 입력 영역 */
+        .input-section {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        input {
+            padding: 10px 15px;
+            border-radius: 4px;
+            border: none;
+            width: 250px;
+            font-size: 14px;
+        }
+
+        input::placeholder {
+            color: #999;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            font-size: 14px;
+        }
+
+        button:hover { 
+            background-color: #b20710; 
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* 컨트롤 버튼 */
+        .control-buttons {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .control-buttons button {
+            padding: 8px 15px;
+            font-size: 13px;
+        }
+
+        /* 영화 보관함 */
+        .storage-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--card-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            min-height: 80px;
+            border: 2px solid #444;
+        }
+
+        .storage-container h3 {
+            margin-bottom: 10px;
+            color: var(--accent-color);
+            font-size: 16px;
+        }
+
+        .storage-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 50px;
+            align-content: flex-start;
+        }
+
+        /* 티어 리스트 스타일 */
+        .tier-container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .tier-row {
+            display: flex;
+            min-height: 120px;
+            background-color: #333;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .tier-label {
+            width: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #000;
+            flex-shrink: 0;
+        }
+
+        /* 티어별 색상 */
+        .s-tier { background-color: #ff7f7f; }
+        .a-tier { background-color: #ffbf7f; }
+        .b-tier { background-color: #ffff7f; }
+        .c-tier { background-color: #7fff7f; }
+        .d-tier { background-color: #7fbfff; }
+
+        /* 드롭 구역 */
+        .drop-zone {
+            flex-grow: 1;
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-content: flex-start;
+            transition: background-color 0.2s;
+        }
+
+        .drop-zone:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .drop-zone.drag-over {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px dashed var(--accent-color);
+        }
+
+        /* 영화 아이템 카드 */
+        .movie-item {
+            background-color: #fff;
+            color: #000;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: grab;
+            font-weight: 500;
+            font-size: 13px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            user-select: none;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: transform 0.2s;
+        }
+
+        .movie-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .movie-item:active { 
+            cursor: grabbing;
+        }
+
+        .movie-item.dragging {
+            opacity: 0.5;
+        }
+
+        .movie-item .delete-btn {
+            background: none;
+            border: none;
+            color: #ff4444;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+            display: none;
+            font-weight: bold;
+        }
+
+        .movie-item:hover .delete-btn {
+            display: block;
+        }
+
+        .movie-item .delete-btn:hover {
+            color: #ff0000;
+        }
+
+        /* 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background-color: var(--card-color);
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            border: 2px solid var(--accent-color);
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h2 {
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background-color: #1a1a1a;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .modal-content input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 5px rgba(229, 9, 20, 0.5);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 10px;
+        }
+
+        .modal-buttons .cancel-btn {
+            background-color: #555;
+        }
+
+        .modal-buttons .cancel-btn:hover {
+            background-color: #666;
+        }
+
+        /* 반응형 */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 24px;
+            }
+
+            input {
+                width: 100%;
+            }
+
+            .tier-row {
+                min-height: 100px;
+            }
+
+            .tier-label {
+                width: 80px;
+                font-size: 20px;
+            }
+
+            .storage-container {
+                max-width: 100%;
+            }
+
+            .tier-container {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🎬 나만의 영화 티어리스트</h1>
+
+    <!-- 입력 영역 -->
+    <div class="input-section">
+        <input type="text" id="movieInput" placeholder="영화 제목을 입력하세요" />
+        <button onclick="addMovie()">추가</button>
+    </div>
+
+    <!-- 컨트롤 버튼 -->
+    <div class="control-buttons">
+        <button onclick="clearAll()">전체 초기화</button>
+        <button onclick="exportTierList()">이미지로 저장</button>
+        <button onclick="openImportModal()">데이터 불러오기</button>
+    </div>
+
+    <!-- 영화 보관함 -->
+    <div class="storage-container">
+        <h3>📦 영화 보관함 (드래그해서 티어에 추가)</h3>
+        <div class="storage-items" id="storage" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"></div>
+    </div>
+
+    <!-- 티어 리스트 -->
+    <div class="tier-container">
+        <div class="tier-row">
+            <div class="tier-label s-tier">S</div>
+            <div class="drop-zone" id="tier-s" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"></div>
+        </div>
+        <div class="tier-row">
+            <div class="tier-label a-tier">A</div>
+            <div class="drop-zone" id="tier-a" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"></div>
+        </div>
+        <div class="tier-row">
+            <div class="tier-label b-tier">B</div>
+            <div class="drop-zone" id="tier-b" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"></div>
+        </div>
+        <div class="tier-row">
+            <div class="tier-label c-tier">C</div>
+            <div class="drop-zone" id="tier-c" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"></div>
+        </div>
+        <div class="tier-row">
+            <div class="tier-label d-tier">D</div>
+            <div class="drop-zone" id="tier-d" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"></div>
+        </div>
+    </div>
+
+    <!-- 데이터 불러오기 모달 -->
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <h2>데이터 불러오기</h2>
+            <textarea id="importData" placeholder="저장된 데이터를 붙여넣으세요" style="width: 100%; height: 150px; padding: 10px; border-radius: 4px; border: 1px solid #555; background-color: #1a1a1a; color: var(--text-color); font-family: monospace; font-size: 12px; margin-bottom: 15px;"></textarea>
+            <div class="modal-buttons">
+                <button onclick="importData()">불러오기</button>
+                <button class="cancel-btn" onclick="closeImportModal()">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 데이터 저장소
+        let movies = {
+            storage: [],
+            'tier-s': [],
+            'tier-a': [],
+            'tier-b': [],
+            'tier-c': [],
+            'tier-d': []
+        };
+
+        let draggedElement = null;
+
+        // 페이지 로드 시 저장된 데이터 불러오기
+        window.addEventListener('load', () => {
+            loadFromLocalStorage();
+            renderAll();
+        });
+
+        // 영화 추가
+        function addMovie() {
+            const input = document.getElementById('movieInput');
+            const title = input.value.trim();
+
+            if (title === '') {
+                alert('영화 제목을 입력하세요!');
+                return;
+            }
+
+            if (movies.storage.some(m => m === title)) {
+                alert('이미 추가된 영화입니다!');
+                return;
+            }
+
+            movies.storage.push(title);
+            input.value = '';
+            renderStorage();
+            saveToLocalStorage();
+        }
+
+        // Enter 키로 추가
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('movieInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addMovie();
+            });
+        });
+
+        // 드래그 시작
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', e.target.innerHTML);
+        }
+
+        // 드래그 끝
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+            document.getElementById('storage').classList.remove('drag-over');
+        }
+
+        // 드래그 오버
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            e.target.closest('.drop-zone, #storage').classList.add('drag-over');
+        }
+
+        // 드래그 떠남
+        function handleDragLe
